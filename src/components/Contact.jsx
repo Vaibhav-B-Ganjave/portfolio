@@ -1,32 +1,29 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import emailjs from '@emailjs/browser'
+import { profile } from '../data'
+import { copyText } from '../hooks'
+import { ArrowUpRight, Copy, GitHub, Globe, LinkedIn, Mail, Phone } from './Icons'
+import { Magnetic, Reveal, TiltCard } from './Motion'
 
-const contacts = [
-  { icon: '✉️', label: 'Email', value: 'ganjavevaibhav1@gmail.com', href: 'mailto:ganjavevaibhav1@gmail.com' },
-  { icon: '📱', label: 'Phone', value: '+91 9370283002', href: 'tel:+919370283002' },
-  { icon: '💼', label: 'LinkedIn', value: 'vaibhav--ganjave', href: 'https://www.linkedin.com/in/vaibhav--ganjave' },
-  { icon: '🐙', label: 'GitHub', value: 'Vaibhav-B-Ganjave', href: 'https://github.com/Vaibhav-B-Ganjave' },
+const links = [
+  { icon: Mail, label: 'Email', value: profile.email, href: `mailto:${profile.email}` },
+  { icon: Phone, label: 'Phone', value: profile.phone, href: `tel:${profile.phone.replace(/\s/g, '')}` },
+  { icon: LinkedIn, label: 'LinkedIn', value: profile.linkedinHandle, href: profile.linkedin },
+  { icon: GitHub, label: 'GitHub', value: profile.githubHandle, href: profile.github },
+  { icon: Globe, label: 'Portfolio', value: profile.websiteHandle, href: profile.website },
 ]
 
-export default function Contact() {
-  const ref = useRef()
-  const formRef = useRef()
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+const empty = { name: '', email: '', subject: '', message: '' }
+
+export default function Contact({ onToast }) {
+  const [form, setForm] = useState(empty)
   const [status, setStatus] = useState('idle') // idle | loading | success | error
 
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      es => es.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
-      { threshold: 0.1 }
-    )
-    ref.current?.querySelectorAll('.reveal').forEach(el => obs.observe(el))
-    return () => obs.disconnect()
-  }, [])
+  const set = key => e => setForm(f => ({ ...f, [key]: e.target.value }))
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
     setStatus('loading')
-
     try {
       await emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -40,126 +37,87 @@ export default function Contact() {
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       )
       setStatus('success')
-      setForm({ name: '', email: '', subject: '', message: '' })
-      setTimeout(() => setStatus('idle'), 5000)
+      setForm(empty)
     } catch {
       setStatus('error')
-      setTimeout(() => setStatus('idle'), 5000)
     }
+    setTimeout(() => setStatus('idle'), 6000)
   }
 
+  const copyEmail = async () => {
+    onToast(await copyText(profile.email) ? 'Email copied to clipboard' : 'Could not copy. Please select it manually.')
+  }
+
+  const busy = status === 'loading'
+
   return (
-    <section className="contact" id="contact" ref={ref}>
-      <div className="container">
-        <div className="sec-head reveal">
-          <h2 className="sec-title"><span>Contact</span></h2>
-          <p className="sec-sub">I'd love to hear from you — reach out for any opportunities or questions!</p>
-          <div className="sec-line" />
-        </div>
+    <section className="section contact" id="contact">
+      <div className="contact-aurora" aria-hidden="true" />
+      <div className="wrap">
+        <Reveal className="sec-kicker mono"><span className="sec-index">05</span>Contact</Reveal>
+        <Reveal as="h2" className="contact-title" delay={0.05}>
+          <span className="contact-title-line">Let's build something</span>{' '}
+          <span className="grad-text">remarkable</span>.
+        </Reveal>
 
-        <div className="contact-inner">
-          <div className="contact-form-wrap reveal">
-            <div className="form-title">Connect With Me 🚀</div>
+        <Reveal className="contact-email" delay={0.1}>
+          <a href={`mailto:${profile.email}`}>{profile.email}</a>
+          <button className="icon-btn" onClick={copyEmail} aria-label="Copy email address"><Copy /></button>
+        </Reveal>
 
-            {status === 'success' && (
-              <div className="form-alert success">
-                <span>✅</span>
-                <div>
-                  <strong>Message sent successfully!</strong>
-                  <p>Thanks for reaching out. I'll get back to you soon.</p>
-                </div>
-              </div>
-            )}
+        <div className="contact-grid">
+          <ul className="contact-links">
+            {links.map(({ icon: Icon, label, value, href }, i) => {
+              const external = href.startsWith('http')
+              return (
+                <Reveal as="li" key={label} delay={i * 0.05}>
+                  <a href={href} target={external ? '_blank' : undefined} rel={external ? 'noreferrer' : undefined}>
+                    <span className="contact-icon"><Icon /></span>
+                    <span className="contact-link-text">
+                      <span className="contact-link-label">{label}</span>
+                      <span className="muted small contact-link-value">{value}</span>
+                    </span>
+                    <ArrowUpRight />
+                  </a>
+                </Reveal>
+              )
+            })}
+          </ul>
 
-            {status === 'error' && (
-              <div className="form-alert error">
-                <span>❌</span>
-                <div>
-                  <strong>Failed to send message.</strong>
-                  <p>Please try emailing directly at ganjavevaibhav1@gmail.com</p>
-                </div>
-              </div>
-            )}
-
-            <form ref={formRef} onSubmit={handleSubmit}>
+          <TiltCard className="tile form-card" max={3}>
+            <form className="form" onSubmit={handleSubmit}>
               <div className="form-row">
-                <div className="form-group">
-                  <label>Your Email *</label>
-                  <input
-                    type="email"
-                    placeholder="your@email.com"
-                    value={form.email}
-                    onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    required
-                    disabled={status === 'loading'}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Your Name *</label>
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    value={form.name}
-                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    required
-                    disabled={status === 'loading'}
-                  />
-                </div>
+                <label>
+                  <span>Name</span>
+                  <input type="text" value={form.name} onChange={set('name')} placeholder="Your name" required disabled={busy} />
+                </label>
+                <label>
+                  <span>Email</span>
+                  <input type="email" value={form.email} onChange={set('email')} placeholder="you@company.com" required disabled={busy} />
+                </label>
               </div>
+              <label>
+                <span>Subject</span>
+                <input type="text" value={form.subject} onChange={set('subject')} placeholder="A role, a project, or just hello" disabled={busy} />
+              </label>
+              <label>
+                <span>Message</span>
+                <textarea rows="5" value={form.message} onChange={set('message')} placeholder="Tell me a bit about it…" required disabled={busy} />
+              </label>
 
-              <div className="form-row">
-                <div className="form-group full">
-                  <label>Subject</label>
-                  <input
-                    type="text"
-                    placeholder="What's this about?"
-                    value={form.subject}
-                    onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-                    disabled={status === 'loading'}
-                  />
-                </div>
+              <div className="form-foot">
+                <Magnetic strength={0.2}>
+                  <button type="submit" className="btn btn-primary" disabled={busy}>
+                    {busy ? <><span className="spinner" aria-hidden="true" /> Sending…</> : 'Send message'}
+                  </button>
+                </Magnetic>
+                <p className={`form-status ${status}`} role="status">
+                  {status === 'success' && "Thanks! Your message is on its way and I'll reply soon."}
+                  {status === 'error' && `Something went wrong. Please email me directly at ${profile.email}.`}
+                </p>
               </div>
-
-              <div className="form-row">
-                <div className="form-group full">
-                  <label>Message *</label>
-                  <textarea
-                    placeholder="Your message..."
-                    value={form.message}
-                    onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                    required
-                    disabled={status === 'loading'}
-                  />
-                </div>
-              </div>
-
-              <button type="submit" className="form-submit" disabled={status === 'loading'}>
-                {status === 'loading' ? (
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                    <span className="spinner" /> Sending...
-                  </span>
-                ) : 'Send Message'}
-              </button>
             </form>
-          </div>
-
-          <div className="contact-links reveal">
-            {contacts.map(c => (
-              <a
-                key={c.label}
-                href={c.href}
-                className="c-link"
-                target={c.href.startsWith('http') ? '_blank' : undefined}
-                rel={c.href.startsWith('http') ? 'noreferrer' : undefined}
-              >
-                <div className="c-link-ico">{c.icon}</div>
-                <div>
-                  <h4>{c.label}</h4>
-                  <p>{c.value}</p>
-                </div>
-              </a>
-            ))}
-          </div>
+          </TiltCard>
         </div>
       </div>
     </section>

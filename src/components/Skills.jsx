@@ -1,73 +1,59 @@
-import { useEffect, useRef } from 'react'
+import { lazy, Suspense, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { sphereWords, stack } from '../data'
+import { useInView } from '../hooks'
+import { SectionHead } from './About'
+import { Reveal } from './Motion'
 
-const cats = [
-  {
-    title: 'Frontend',
-    skills: [
-      { ico: '⚛️', name: 'React.js' }, { ico: '🟨', name: 'JavaScript (ES6+)' },
-      { ico: '🌐', name: 'HTML5' }, { ico: '🎨', name: 'CSS3' },
-      { ico: '📱', name: 'Responsive UI' }, { ico: '🔗', name: 'REST APIs' },
-    ],
-  },
-  {
-    title: 'Backend',
-    skills: [
-      { ico: '🟢', name: 'Node.js' }, { ico: '☕', name: 'Java' },
-      { ico: '🍃', name: 'Spring (Basic)' }, { ico: '🗃️', name: 'Hibernate' },
-      { ico: '🔌', name: 'Express.js' },
-    ],
-  },
-  {
-    title: 'Database',
-    skills: [
-      { ico: '🍃', name: 'MongoDB' }, { ico: '🗄️', name: 'SQL / MySQL' },
-      { ico: '🔷', name: 'SQL Plus' }, { ico: '📊', name: 'Schema Design' },
-    ],
-  },
-  {
-    title: 'Tools & Platforms',
-    skills: [
-      { ico: '⚡', name: 'Mendix' }, { ico: '🐙', name: 'Git / GitHub' },
-      { ico: '💻', name: 'VS Code' }, { ico: '🧠', name: 'IntelliJ IDEA' },
-      { ico: '🌑', name: 'Eclipse' }, { ico: '🛠️', name: 'Postman' },
-    ],
-  },
-]
+const SkillSphere = lazy(() => import('../three/SkillSphere'))
 
 export default function Skills() {
-  const ref = useRef()
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      es => es.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
-      { threshold: 0.1 }
-    )
-    ref.current?.querySelectorAll('.reveal').forEach(el => obs.observe(el))
-    return () => obs.disconnect()
-  }, [])
+  const [sphereRef, inView] = useInView('200px')
+  const [hovered, setHovered] = useState(null)
 
   return (
-    <section id="skills" ref={ref}>
-      <div className="container">
-        <div className="sec-head reveal">
-          <h2 className="sec-title"><span>Skills</span></h2>
-          <p className="sec-sub">A collection of my technical skills and expertise</p>
-          <div className="sec-line" />
-        </div>
+    <section className="section" id="skills">
+      <div className="wrap">
+        <SectionHead
+          index="03"
+          kicker="Skills"
+          title={<>A toolbox that covers the <span className="grad-text">whole stack</span>.</>}
+          note="Point at the globe to spin it. It's built in React Three Fiber: every word is a real 3D object."
+        />
 
-        <div className="skills-cats">
-          {cats.map((cat, i) => (
-            <div className="skill-cat reveal" key={cat.title} style={{ transitionDelay: `${i * 80}ms` }}>
-              <div className="skill-cat-title">{cat.title}</div>
-              <div className="skill-pills">
-                {cat.skills.map(s => (
-                  <span className="sk-pill" key={s.name}>
-                    <span className="sk-ico">{s.ico}</span>
-                    {s.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="skills">
+          <div className="skills-sphere" ref={sphereRef}>
+            <div className="sphere-glow" aria-hidden="true" />
+            {inView || hovered !== null ? (
+              <Suspense fallback={null}>
+                <SkillSphere words={sphereWords} active={inView} onHover={setHovered} />
+              </Suspense>
+            ) : null}
+            <AnimatePresence>
+              {hovered && (
+                <motion.span
+                  key={hovered}
+                  className="sphere-tag mono"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                >
+                  {hovered}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="skills-groups">
+            {stack.map((g, i) => (
+              <Reveal key={g.group} className="skill-group" delay={i * 0.06}>
+                <h3 className="mono small">{g.group}</h3>
+                <ul className="chips">
+                  {g.items.map(item => <li key={item} className="chip">{item}</li>)}
+                </ul>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </div>
     </section>

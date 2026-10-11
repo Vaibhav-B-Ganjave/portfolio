@@ -1,29 +1,42 @@
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useRef } from 'react'
+import { profile } from '../data'
+import { isMac, scrollToId } from '../hooks'
 
-export default function Footer() {
-  const [visible, setVisible] = useState(false)
+/** Sizes a single line of text so it spans exactly the width of its container. */
+function FitText({ children, className }) {
+  const ref = useRef(null)
 
-  useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 300)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
+  useLayoutEffect(() => {
+    const el = ref.current
+    const box = el.parentElement
+    const fit = () => {
+      el.style.fontSize = '100px'
+      const ratio = box.clientWidth / el.scrollWidth
+      el.style.fontSize = `${Math.floor(100 * ratio * 10) / 10}px`
+    }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(box)
+    document.fonts?.ready.then(fit)
+    return () => ro.disconnect()
   }, [])
 
-  const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+  return <p ref={ref} className={className} aria-hidden="true">{children}</p>
+}
 
+export default function Footer() {
   return (
-    <>
-      <footer className="footer">
-        <div className="container">
-          <div className="f-copy">© {new Date().getFullYear()} Vaibhav Ganjave. All rights reserved.</div>
+    <footer className="footer">
+      <div className="wrap">
+        <div className="footer-mark-box">
+          <FitText className="footer-mark">{profile.name}</FitText>
         </div>
-      </footer>
-
-      <button className={`scroll-top${visible ? ' show' : ''}`} onClick={scrollTop} title="Back to top">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="18 15 12 9 6 15" />
-        </svg>
-      </button>
-    </>
+        <div className="footer-inner">
+          <span>© {new Date().getFullYear()} {profile.name}</span>
+          <span className="muted">Built with React, Three.js &amp; Framer Motion · press <kbd>{isMac ? '⌘' : 'Ctrl'} K</kbd> anywhere</span>
+          <button className="link-btn" onClick={() => scrollToId('top')}>Back to top ↑</button>
+        </div>
+      </div>
+    </footer>
   )
 }

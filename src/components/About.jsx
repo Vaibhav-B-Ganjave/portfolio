@@ -1,104 +1,108 @@
-import { useEffect, useRef } from 'react'
+import photo from '../assets/Vaibhav.jpg'
+import { certifications, education, languages, profile } from '../data'
+import { useClock } from '../hooks'
+import { Reveal, TiltCard } from './Motion'
+
+export function SectionHead({ index, kicker, title, note }) {
+  return (
+    <header className="sec-head">
+      <Reveal className="sec-kicker mono"><span className="sec-index">{index}</span>{kicker}</Reveal>
+      <Reveal as="h2" className="sec-title" delay={0.05}>{title}</Reveal>
+      {note && <Reveal as="p" className="sec-note" delay={0.1}>{note}</Reveal>}
+    </header>
+  )
+}
 
 export default function About() {
-  const ref = useRef()
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      es => es.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
-      { threshold: 0.1 }
-    )
-    ref.current?.querySelectorAll('.reveal').forEach(el => obs.observe(el))
-    return () => obs.disconnect()
-  }, [])
+  const time = useClock()
+  const degree = education[0]
 
   return (
-    <section className="about" id="about" ref={ref}>
-      <div className="container">
-        <div className="sec-head reveal">
-          <h2 className="sec-title"><span>About</span> Me</h2>
-          <p className="sec-sub">A passionate developer building real-world solutions</p>
-          <div className="sec-line" />
+    <section className="section" id="about">
+      <div className="wrap">
+        <SectionHead
+          index="04"
+          kicker="About"
+          title={<>The person behind <span className="grad-text">the code</span>.</>}
+        />
+
+        <div className="bento">
+          <TiltCard className="tile tile-intro" max={4}>
+            <p className="intro-big">
+              I'm a Computer Engineering graduate from Pune who found my place in <span className="hl">full-stack
+              development</span>. I enjoy the whole journey of a feature, from a conversation about requirements
+              to a <span className="hl">clean, deployed product</span> people use every day.
+            </p>
+            <p className="intro-small">
+              At work I move between React screens, Express APIs, database schemas and Mendix models, often in
+              the same week, and I like being the person who can follow a bug through every layer.
+            </p>
+          </TiltCard>
+
+          <TiltCard className="tile tile-photo" max={6}>
+            <div className="photo-frame">
+              <img src={photo} alt="Portrait of Vaibhav Ganjave" loading="lazy" />
+            </div>
+            <div className="photo-caption">
+              <span className="tile-strong">{profile.name}</span>
+              <span className="mono small muted">{profile.role} · {profile.location}</span>
+            </div>
+          </TiltCard>
+
+          <TiltCard className="tile tile-edu">
+            <span className="tile-label">Education</span>
+            <p className="big-num grad-text">{degree.score.split(' ')[0]}</p>
+            <p className="tile-strong">{degree.title}</p>
+            <p className="muted small">{degree.place}</p>
+          </TiltCard>
+
+          <TiltCard className="tile tile-time">
+            <span className="tile-label">Local time · Pune</span>
+            <p className="clock">{time}</p>
+            <p className="muted small">IST (UTC+5:30)</p>
+          </TiltCard>
+
+          <TiltCard className="tile tile-cert">
+            <span className="tile-label">Certifications</span>
+            <ul className="cert-list">
+              {certifications.map(c => (
+                <li key={c.title}>
+                  <span className="cert-badge" aria-hidden="true">✦</span>
+                  <span>
+                    <span className="tile-strong">{c.title}</span>
+                    <span className="muted small block">{c.place}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </TiltCard>
+
+          <TiltCard className="tile tile-lang">
+            <span className="tile-label">I speak</span>
+            <ul className="lang-list">
+              {languages.map(l => (
+                <li key={l.name}>
+                  <span>{l.name}</span>
+                  <span className="lang-meter" aria-label={l.level}>
+                    {[1, 2, 3].map(n => <i key={n} className={n <= l.value ? 'on' : undefined} />)}
+                  </span>
+                  <span className="mono small muted">{l.level}</span>
+                </li>
+              ))}
+            </ul>
+          </TiltCard>
         </div>
 
-        <div className="about-grid">
-          <div className="about-text reveal">
-            <p>
-              I'm a <strong>Full Stack Developer</strong> based in Pune, India, currently working at{' '}
-              <strong>Four Colours India Pvt. Ltd.</strong> I specialize in building scalable,
-              production-ready web applications using modern technologies.
-            </p>
-            <p>
-              With hands-on expertise in <strong>React.js, Node.js, SQL, and MongoDB</strong>, I enjoy
-              every phase of the development lifecycle — from gathering requirements and designing
-              architecture, to writing clean code and deploying to production.
-            </p>
-            <p>
-              I also have deep experience with the <strong>Mendix low-code platform</strong> and{' '}
-              <strong>Java integration</strong>, having built enterprise solutions that bridge complex
-              business needs with modern tech.
-            </p>
-
-            <div className="info-grid">
-              {[
-                ['Location', 'Pune, India'],
-                ['Role', 'Software Developer'],
-                ['Company', 'Four Colours India Pvt. Ltd.'],
-                ['Degree', 'B.E. Computer Engineering'],
-                ['CGPA', '8.78 / 10'],
-                ['Email', 'ganjavevaibhav1@gmail.com'],
-              ].map(([l, v]) => (
-                <div className="info-box" key={l}>
-                  <div className="lbl">{l}</div>
-                  <div className="val" style={{ fontSize: l === 'Email' ? '0.76rem' : undefined }}>{v}</div>
-                </div>
-              ))}
+        <Reveal className="school-list">
+          {education.slice(1).map(e => (
+            <div key={e.title} className="school-row">
+              <span className="tile-strong">{e.title}</span>
+              <span className="muted small">{e.place}</span>
+              <span className="mono small">{e.score}</span>
+              <span className="mono small muted">{e.year}</span>
             </div>
-          </div>
-
-          <div className="about-right reveal">
-            <div className="a-card">
-              <div className="a-card-title">🏆 Certificates</div>
-              <div className="cert-row">
-                <div className="cert-ico">☕</div>
-                <div>
-                  <h4>Full Stack Java Development Training</h4>
-                  <p>QSpiders, Hadapsar Pune</p>
-                </div>
-              </div>
-              <div className="cert-row">
-                <div className="cert-ico">⚡</div>
-                <div>
-                  <h4>Mendix: Low-code App Development</h4>
-                  <p>Udemy</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="a-card">
-              <div className="a-card-title">🌐 Languages</div>
-              {[['English', 'Professional'], ['Hindi', 'Fluent'], ['Marathi', 'Native']].map(([l, v]) => (
-                <div className="lang-row" key={l}>
-                  <span className="l-name">{l}</span>
-                  <span className="lang-pill">{v}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="a-card">
-              <div className="a-card-title">🎯 Achievements</div>
-              {[
-                'Delivered 3+ enterprise projects incl. automation & chatbot',
-                '2 years of professional full-stack development experience',
-                'Contributed to low-code client solutions in Mendix + Java',
-              ].map((a, i, arr) => (
-                <div key={i} style={{ display: 'flex', gap: '9px', padding: '9px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                  <span style={{ color: 'var(--green)', flexShrink: 0 }}>✦</span>
-                  {a}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+          ))}
+        </Reveal>
       </div>
     </section>
   )
